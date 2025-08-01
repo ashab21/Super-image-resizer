@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatSelect = document.getElementById('formatSelect');
     const resizeBtn = document.getElementById('resizeBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+    const qualityToggle = document.getElementById('qualityToggle');
+    const qualityControls = document.getElementById('qualityControls');
+    const sizeControls = document.getElementById('sizeControls');
+    const targetSizeInput = document.getElementById('targetSizeInput');
+    const sizeUnitSelect = document.getElementById('sizeUnitSelect');
 
     const originalPreview = document.getElementById('originalPreview');
     const originalImage = document.getElementById('originalImage');
@@ -25,6 +30,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let originalFile = null;
     let originalWidth, originalHeight;
+
+    // --- Helper Functions ---
+
+    // Function to calculate file size from data URL
+    const calculateFileSize = (dataUrl) => {
+        const base64 = dataUrl.split(',')[1];
+        const bytes = atob(base64).length;
+        return bytes;
+    };
+
+    // Function to resize image using binary search for quality
+    const resizeImageToTargetSize = (newWidth, newHeight, format, targetBytes) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+            let low = 0, high = 1, mid, dataUrl, currentBytes;
+
+            // Binary search for quality
+            for (let i = 0; i < 10; i++) { // 10 iterations for good precision
+                mid = (low + high) / 2;
+                dataUrl = canvas.toDataURL(format, mid);
+                currentBytes = calculateFileSize(dataUrl);
+
+                if (currentBytes > targetBytes) {
+                    high = mid;
+                } else {
+                    low = mid;
+                }
+            }
+
+            // Final check and adjustment
+            let finalQuality = high;
+            dataUrl = canvas.toDataURL(format, finalQuality);
+            currentBytes = calculateFileSize(dataUrl);
+
+            // If the size is still too big, try a slightly lower quality
+            if (currentBytes > targetBytes && finalQuality > 0.1) {
+                finalQuality -= 0.05;
+                dataUrl = canvas.toDataURL(format, finalQuality);
+                currentBytes = calculateFileSize(dataUrl);
+            }
+            
+            resolve({ dataUrl, finalBytes: currentBytes });
+        });
+    };
 
     // --- Event Listeners ---
     
@@ -80,13 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Toggle between quality and size controls
+    qualityToggle.addEventListener('change', () => {
+        if (qualityToggle.checked) {
+            qualityControls.style.display = 'none';
+            sizeControls.style.display = 'block';
+        } else {
+            qualityControls.style.display = 'block';
+            sizeControls.style.display = 'none';
+        }
+    });
+
     // Quality Slider
     qualitySlider.addEventListener('input', () => {
         qualityValueSpan.textContent = parseFloat(qualitySlider.value).toFixed(1);
     });
 
     // Resize Button Click
-    resizeBtn.addEventListener('click', () => {
+    resizeBtn.addEventListener('click', async () => {
         if (!originalFile) {
             alert('অনুগ্রহ করে প্রথমে একটি ছবি আপলোড করুন।');
             return;
@@ -94,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newWidth = parseInt(widthInput.value);
         const newHeight = parseInt(heightInput.value);
-        const quality = parseFloat(qualitySlider.value);
         const format = formatSelect.value;
         const extension = format.split('/')[1];
 
@@ -102,24 +166,62 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('সঠিক Width এবং Height দিন।');
             return;
         }
-
-        // Create a canvas to draw the resized image
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-
-        // Draw the image
-        ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
-
-        // Get the data URL
-        const dataUrl = canvas.toDataURL(format, quality);
-        resizedImage.src = dataUrl;
-
-        // Show resized preview
-        resizedPreview.style.display = 'block';
-        resizedInfo.textContent = `${newWidth} x ${newHeight} px`;
         
+        let dataUrl, finalBytes;
+        let resizedImageInfoText = '';
+
+        if (qualityToggle.checked) { // User wants to resize by target size
+            const targetSize = parseFloat(targetSizeInput.value);
+            if (isNaN(targetSize) || targetSize <= 0) {
+                alert('সঠিক টার্গেট ফাইল সাইজ দিন।');
+                return;
+            }
+
+            let targetBytes = targetSize;
+            if (sizeUnitSelect.value === 'mb') {
+                targetBytes *= 1024 * 1024;
+            } else {
+                targetBytes *= 1024;
+            }
+
+            // PNG format doesn't support quality, so we fall back to JPEG/WEBP
+            if (format === 'image/png') {
+                alert('PNG ফরম্যাট ফাইল সাইজ রিসাইজিং সাপোর্ট করে না। JPEG বা WEBP ব্যবহার করুন।');
+                return;
+            }
+
+            const result = await resizeImageToTargetSize(newWidth, newHeight, format, targetBytes);
+            dataUrl = result.dataUrl;
+            finalBytes = result.finalBytes;
+
+            const finalSizeKB = (finalBytes / 1024).toFixed(2);
+            resizedImageInfoText = `${newWidth} x ${newHeight} px | ${finalSizeKB} KB`;
+
+        } else { // User wants to resize by quality slider
+            const quality = parseFloat(qualitySlider.value);
+            
+            // Create a canvas to draw the resized image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+            dataUrl = canvas.toDataURL(format, quality);
+            finalBytes = calculateFileSize(dataUrl);
+            
+            if (format === 'image/png') {
+                resizedImageInfoText = `${newWidth} x ${newHeight} px`;
+            } else {
+                const finalSizeKB = (finalBytes / 1024).toFixed(2);
+                resizedImageInfoText = `${newWidth} x ${newHeight} px | ${finalSizeKB} KB`;
+            }
+        }
+        
+        resizedImage.src = dataUrl;
+        resizedPreview.style.display = 'block';
+        resizedInfo.textContent = resizedImageInfoText;
+
         // Prepare download link
         downloadBtn.href = dataUrl;
         downloadBtn.download = `resized-${Date.now()}.${extension.toLowerCase()}`;
