@@ -11,64 +11,56 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <script type='text/javascript' src='//promoteconditionerkeyboard.com/dd/5f/48/dd5f4881d2450eda7c5c51ee5863c542.js'></script>
+
     <div class="top-bar">
         <div class="branding">
             <h1>Super Image Resizer</h1>
         </div>
     </div>
+
     <div class="container">
         <div class="controls-card">
             <h2>রিসাইজ অপশনস</h2>
+
             <div class="file-upload-wrapper">
                 <label for="imageInput" class="file-upload-label">ছবি আপলোড করুন</label>
-                <input type="file" id="imageInput" accept="image/*" aria-label="ছবি আপলোড করুন">
+                <input type="file" id="imageInput" accept="image/*">
                 <span id="fileName">কোনো ফাইল সিলেক্ট করা হয়নি</span>
             </div>
+            
             <div class="options">
                 <div class="option-group">
-                    <label for="widthInput">রিসাইজ করুন (পিক্সেল):</label>
-                    <input type="number" id="widthInput" placeholder="প্রস্থ (Width)" aria-label="প্রস্থ">
+                    <label>রিসাইজ করুন (পিক্সেল):</label>
+                    <input type="number" id="widthInput" placeholder="প্রস্থ (Width)">
                     <span>x</span>
-                    <input type="number" id="heightInput" placeholder="উচ্চতা (Height)" aria-label="উচ্চতা">
+                    <input type="number" id="heightInput" placeholder="উচ্চতা (Height)">
                 </div>
+                
                 <div class="option-group aspect-ratio">
                     <input type="checkbox" id="aspectRatio" checked>
                     <label for="aspectRatio">Aspect Ratio ঠিক রাখুন</label>
                 </div>
-                <div class="option-group toggle-group">
-                    <label for="qualityToggle">কোয়ালিটি / ফাইল সাইজ:</label>
-                    <div class="toggle-switch">
-                        <input type="checkbox" id="qualityToggle" aria-label="কোয়ালিটি এবং ফাইল সাইজের মধ্যে টগল করুন">
-                        <label for="qualityToggle" class="slider"></label>
-                    </div>
+
+                <div class="option-group">
+                    <label for="qualitySlider"> ছবির কোয়ালিটি (JPG/WEBP): <span id="qualityValue">0.9</span></label>
+                    <input type="range" id="qualitySlider" min="0.1" max="1" step="0.1" value="0.9">
                 </div>
-                <div id="qualityControls" class="control-section">
-                    <div class="option-group">
-                        <label for="qualitySlider">ছবির কোয়ালিটি (JPG/WEBP): <span id="qualityValue">0.9</span></label>
-                        <input type="range" id="qualitySlider" min="0.1" max="1" step="0.1" value="0.9" aria-label="ছবির কোয়ালিটি">
-                    </div>
-                </div>
-                <div id="sizeControls" class="control-section" style="display: none;">
-                    <div class="option-group">
-                        <label for="targetSizeInput">টার্গেট ফাইল সাইজ:</label>
-                        <input type="number" id="targetSizeInput" placeholder="উদাহরণ: ২৫০" aria-label="টার্গেট ফাইল সাইজ">
-                        <select id="sizeUnitSelect" aria-label="ফাইলের সাইজ ইউনিট">
-                            <option value="kb">KB</option>
-                            <option value="mb">MB</option>
-                        </select>
-                    </div>
-                </div>
+
                 <div class="option-group">
                     <label for="formatSelect">আউটপুট ফরম্যাট:</label>
-                    <select id="formatSelect" aria-label="আউটপুট ফরম্যাট">
+                    <select id="formatSelect">
                         <option value="image/jpeg">JPEG</option>
                         <option value="image/png">PNG</option>
                         <option value="image/webp">WEBP</option>
                     </select>
                 </div>
             </div>
+
             <button id="resizeBtn" class="action-btn" disabled>ছবি রিসাইজ করুন</button>
         </div>
+
         <div class="preview-card">
             <h2>প্রিভিউ</h2>
             <div id="placeholder-text">
@@ -90,19 +82,10 @@
         </div>
     </div>
 
-    <script type="text/javascript">
-        atOptions = {
-            'key' : '29c965a767787d21e171cd666597f4d9',
-            'format' : 'iframe',
-            'height' : 300,
-            'width' : 160,
-            'params' : {}
-        };
-    </script>
-    <script type="text/javascript" src="//promoteconditionerkeyboard.com/29c965a767787d21e171cd666597f4d9/invoke.js"></script>
     <footer>
         <p>© ২০২৪ - Super Image Resizer। সর্বস্বত্ব সংরক্ষিত।</p>
     </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
